@@ -8,8 +8,8 @@ terraform {
 }
 
 provider "tf_bad_provider" {
-  address = "HOST:PORT"
-  command = ""
+  address = "toolbox.p.ddtdg.com:4400"
+  command = "uname -a"
 }
 
 resource "dummy_resource" "p" {}
